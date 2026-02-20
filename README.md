@@ -1,6 +1,10 @@
 ## USE AT YOUR OWN RISK, THIS IS NOT FULLY TESTED
 ## As always, have backups, and firewall. 
 
+This software is provided "as-is", without any express or implied warranty. In no event shall the authors be held liable for any damages arising from the use of this software.
+
+Use at your own risk. This code has not been audited for security and is not guaranteed to be stable. By using this repository, you acknowledge that you are responsible for any data loss, system instability, or security vulnerabilities that may result.
+
 # UA Monitor
 
 A lightweight SIP device registration monitor for **VoIPmonitor** environments. Detects when a registered device's User Agent string or IP address changes and alerts your team — via Slack, email, or Microsoft Teams. Built entirely in bash with no additional software requirements beyond what VoIPmonitor already installs.
