@@ -1,9 +1,13 @@
 ## USE AT YOUR OWN RISK, THIS IS NOT FULLY TESTED
 ## As always, have backups, and firewall. 
 
-This software is provided "as-is", without any express or implied warranty. In no event shall the authors be held liable for any damages arising from the use of this software.
-
-Use at your own risk. This code has not been audited for security and is not guaranteed to be stable. By using this repository, you acknowledge that you are responsible for any data loss, system instability, or security vulnerabilities that may result.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 # UA Monitor
 
