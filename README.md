@@ -29,7 +29,7 @@ All changes are written to the tracking database and a local log file regardless
 
 ## Installation
 
-### Option 1 — Automatic (recommended)
+### Option 1 — Automatic
 
 Downloads all files from GitHub and walks you through configuration interactively:
 
