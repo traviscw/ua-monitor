@@ -21,31 +21,35 @@ All changes are written to the tracking database and a local log file regardless
 
 - VoIPmonitor server running Ubuntu/Debian
 - MySQL/MariaDB (already present with VoIPmonitor)
-- "sip-register = yes" within voipmonitor.conf
+- `sip-register = yes` in `/etc/voipmonitor.conf`
 - `curl` and `bash` (already present)
 - A Slack webhook, email (sendmail/mailutils), or Teams webhook
 
 ---
 
-## Files
+## Installation
 
-| File | Description |
-|---|---|
-| `check_ua.sh` | Main monitoring script — runs on cron every 5 minutes |
-| `query.sql` | Change detection SQL query |
-| `notify.sh` | Notification router — set your provider here |
-| `notify_slack.sh` | Slack notification handler |
-| `notify_email.sh` | Email notification handler |
-| `notify_teams.sh` | Microsoft Teams notification handler |
-| `suppress.conf` | Suppression rules |
-| `setup.sql` | MySQL setup — run once on fresh install |
-| `cleanup.sh` | Weekly stale device removal |
+### Option 1 — Automatic (recommended)
+
+Downloads all files from GitHub and walks you through configuration interactively:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/traviscw/ua-monitor/main/install.sh | sudo bash
+```
+
+You will be prompted for:
+- MySQL root password
+- UA Monitor DB password (a new password you choose)
+- Notification provider (Slack / email / Teams) and credentials
+- Alert mode, digest frequency, and octet ignore settings
+
+The script will download all files, configure credentials, set permissions, run the database setup, seed the device table, and optionally install cron jobs — all in one shot.
 
 ---
 
-## Fresh Installation
+### Option 2 — Manual
 
-### 1. Run MySQL Setup
+#### 1. Run MySQL Setup
 
 Update the password in `setup.sql` first, then:
 
@@ -53,14 +57,14 @@ Update the password in `setup.sql` first, then:
 mysql -u root -p < setup.sql
 ```
 
-### 2. Deploy Files
+#### 2. Deploy Files
 
 ```bash
 sudo mkdir -p /opt/ua_monitor
 sudo cp check_ua.sh query.sql notify.sh notify_slack.sh notify_email.sh notify_teams.sh suppress.conf /opt/ua_monitor/
 ```
 
-### 3. Set Credentials
+#### 3. Set Credentials
 
 Edit `check_ua.sh`:
 ```bash
@@ -88,7 +92,7 @@ Then set your provider in `notify.sh`:
 NOTIFY_PROVIDER="slack"   # slack | email | teams
 ```
 
-### 4. Set Permissions
+#### 4. Set Permissions
 
 ```bash
 sudo chmod 700 /opt/ua_monitor/check_ua.sh
@@ -103,7 +107,7 @@ sudo touch /var/log/ua_monitor.log
 sudo chmod 640 /var/log/ua_monitor.log
 ```
 
-### 5. Seed the Database
+#### 5. Seed the Database
 
 ```bash
 sudo /opt/ua_monitor/check_ua.sh --seed
@@ -115,13 +119,13 @@ mysql -u"ua_monitor" -p'yourpassword' -e "SELECT COUNT(*) FROM ua_monitor.device
 tail -20 /var/log/ua_monitor.log
 ```
 
-### 6. Test Run
+#### 6. Test Run
 
 ```bash
 sudo /opt/ua_monitor/check_ua.sh
 ```
 
-### 7. Enable Cron
+#### 7. Enable Cron
 
 ```bash
 sudo crontab -e
@@ -132,6 +136,23 @@ Add:
 */5 * * * * /opt/ua_monitor/check_ua.sh
 0 3 * * 0 /opt/ua_monitor/cleanup.sh
 ```
+
+---
+
+## Files
+
+| File | Description |
+|---|---|
+| `install.sh` | Automated installer — pulls from GitHub and configures everything |
+| `check_ua.sh` | Main monitoring script — runs on cron every 5 minutes |
+| `query.sql` | Change detection SQL query |
+| `notify.sh` | Notification router — set your provider here |
+| `notify_slack.sh` | Slack notification handler |
+| `notify_email.sh` | Email notification handler |
+| `notify_teams.sh` | Microsoft Teams notification handler |
+| `suppress.conf` | Suppression rules |
+| `setup.sql` | MySQL setup — run once on fresh install |
+| `cleanup.sh` | Weekly stale device removal |
 
 ---
 
@@ -182,7 +203,7 @@ Add:
 
 ## Suppression Rules
 
-Edit `/opt/ua_monitor/suppress.conf`. Changes take effect on the next cron run.
+Edit `/opt/ua_monitor/suppress.conf`. Changes take effect on the next cron run — no restart needed.
 
 | Rule | Example | Effect |
 |---|---|---|
@@ -192,17 +213,17 @@ Edit `/opt/ua_monitor/suppress.conf`. Changes take effect on the next cron run.
 | `UA:` | `UA:Mobile321` | Ignore an exact UA string |
 | `UA_PREFIX:` | `UA_PREFIX:Mobile/1.0` | Ignore any UA starting with prefix |
 | `UA_CHANGE:` | `UA_CHANGE:UA One->UA Two` | Ignore an exact UA-to-UA change |
-| `UA_CHANGE_PREFIX:` | `UA_CHANGE_PREFIX:App/1.8->App/1.8` | Ignore version bumps within the same app |
+| `UA_CHANGE_PREFIX:` | `UA_CHANGE_PREFIX:App/1.8->App/1.9` | Ignore version bumps within the same app |
 
 ---
 
 ## Alerts
 
 ### 🔴 Change Alert
-All UA/IP changes detected in a single cron run are batched into **one** Slack/email/Teams message, rather than one message per device.
+All UA/IP changes detected in a single cron run are batched into **one** message per run, rather than one message per device.
 
 ### 🟢 New Device Digest
-New devices are queued and sent as a single batched table message on the configured digest schedule.
+New devices are queued and sent as a single batched table on the configured digest schedule.
 
 ---
 
@@ -215,12 +236,12 @@ sudo /opt/ua_monitor/check_ua.sh --seed
 # Watch the log live
 tail -f /var/log/ua_monitor.log
 
-# Check database size
+# Check device count
 mysql -u"ua_monitor" -p'yourpassword' -e "
     SELECT COUNT(*) AS devices, MIN(last_seen) AS oldest, MAX(last_seen) AS newest
     FROM ua_monitor.device_ua;"
 
-# Check digest queue
+# Check new device queue
 mysql -u"ua_monitor" -p'yourpassword' -e "
     SELECT COUNT(*) AS queued FROM ua_monitor.new_device_queue;" ua_monitor
 
@@ -242,4 +263,4 @@ mysql -u"ua_monitor" -p'yourpassword' -e "
 | `SUPPRESSED:` | Change matched a rule in `suppress.conf` |
 | `OCTET CHANGE IGNORED:` | IP changed within the ignored octet range |
 | `DIGEST:` | New device digest was sent |
-| `CLEANUP:` | Weekly stale device removal |
+| `CLEANUP:` | Weekly stale device removal ran |
